@@ -1768,19 +1768,95 @@
          */
         function shareResult() {
             const score = document.getElementById('scoreNumber').textContent;
-            const text = `我在恋爱体质测试中获得了${score}分！快来测测你的恋爱DNA吧！`;
+            const personalityType = document.querySelector('#personalityType .highlight').textContent;
+            const text = `我在恋爱体质测试中获得了${score}分！我的恋爱人格类型是${personalityType}，快来测测你的恋爱DNA吧！`;
+            const url = window.location.href;
             
+            // 移动端优先使用Web Share API
             if (navigator.share) {
                 navigator.share({
                     title: '恋爱体质测试',
                     text: text,
-                    url: window.location.href
+                    url: url
                 }).catch(() => {
-                    copyToClipboard(text);
+                    showShareOptions(text, url);
                 });
             } else {
-                copyToClipboard(text);
+                // 桌面端显示分享选项
+                showShareOptions(text, url);
             }
+        }
+
+        /**
+         * 显示分享选项
+         * @param {string} text - 分享文本
+         * @param {string} url - 分享链接
+         */
+        function showShareOptions(text, url) {
+            // 创建分享选项弹窗
+            const shareModal = document.createElement('div');
+            shareModal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            `;
+            
+            const shareContent = document.createElement('div');
+            shareContent.style.cssText = `
+                background: white;
+                border-radius: 20px;
+                padding: 30px;
+                max-width: 90%;
+                width: 400px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            `;
+            
+            shareContent.innerHTML = `
+                <h3 style="color: var(--primary-color); margin-bottom: 20px; text-align: center;">分享你的测试结果</h3>
+                <div style="margin-bottom: 20px;">
+                    <p style="margin-bottom: 10px; color: var(--text-secondary);">${text}</p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                    <button id="copyLinkBtn" style="padding: 12px; border: 2px solid var(--primary-color); border-radius: 10px; background: white; color: var(--primary-color); font-weight: 600; cursor: pointer; transition: all 0.3s ease;">复制链接</button>
+                    <button id="copyTextBtn" style="padding: 12px; border: 2px solid var(--secondary-color); border-radius: 10px; background: white; color: var(--secondary-color); font-weight: 600; cursor: pointer; transition: all 0.3s ease;">复制文本</button>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                    <a href="https://weibo.com/share/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}" target="_blank" style="flex: 1; min-width: 80px; padding: 10px; border: 2px solid #E6162D; border-radius: 10px; background: white; color: #E6162D; font-weight: 600; text-decoration: none; text-align: center; transition: all 0.3s ease;">微博</a>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}" target="_blank" style="flex: 1; min-width: 80px; padding: 10px; border: 2px solid #1877F2; border-radius: 10px; background: white; color: #1877F2; font-weight: 600; text-decoration: none; text-align: center; transition: all 0.3s ease;">Facebook</a>
+                    <a href="https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}" target="_blank" style="flex: 1; min-width: 80px; padding: 10px; border: 2px solid #1DA1F2; border-radius: 10px; background: white; color: #1DA1F2; font-weight: 600; text-decoration: none; text-align: center; transition: all 0.3s ease;">Twitter</a>
+                </div>
+                <button id="closeShareBtn" style="width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--text-secondary); color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">关闭</button>
+            `;
+            
+            shareModal.appendChild(shareContent);
+            document.body.appendChild(shareModal);
+            
+            // 添加按钮事件
+            document.getElementById('copyLinkBtn').addEventListener('click', () => {
+                copyToClipboard(url);
+            });
+            
+            document.getElementById('copyTextBtn').addEventListener('click', () => {
+                copyToClipboard(text);
+            });
+            
+            document.getElementById('closeShareBtn').addEventListener('click', () => {
+                document.body.removeChild(shareModal);
+            });
+            
+            // 点击外部关闭
+            shareModal.addEventListener('click', (e) => {
+                if (e.target === shareModal) {
+                    document.body.removeChild(shareModal);
+                }
+            });
         }
 
         /**
@@ -1788,11 +1864,56 @@
          * @param {string} text - 要复制的文本
          */
         function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                showToast('结果已复制到剪贴板！');
-            }).catch(() => {
+            // 优先使用现代API
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('结果已复制到剪贴板！');
+                }).catch(() => {
+                    // 现代API失败时使用备用方案
+                    fallbackCopyTextToClipboard(text);
+                });
+            } else {
+                // 不支持现代API时使用备用方案
+                fallbackCopyTextToClipboard(text);
+            }
+        }
+
+        /**
+         * 复制到剪贴板的备用方案
+         * @param {string} text - 要复制的文本
+         */
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            
+            // 设置样式使其不可见
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            textArea.style.width = '2em';
+            textArea.style.height = '2em';
+            textArea.style.padding = '0';
+            textArea.style.border = 'none';
+            textArea.style.outline = 'none';
+            textArea.style.boxShadow = 'none';
+            textArea.style.background = 'transparent';
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast('结果已复制到剪贴板！');
+                } else {
+                    showToast('复制失败，请手动复制');
+                }
+            } catch (err) {
                 showToast('复制失败，请手动复制');
-            });
+            } finally {
+                document.body.removeChild(textArea);
+            }
         }
 
         /**
