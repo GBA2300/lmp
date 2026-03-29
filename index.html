@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>恋爱体质测试 - 你的恋爱DNA大揭秘！</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
         /* ==================== 全局样式 ==================== */
         :root {
@@ -283,6 +284,8 @@
             text-align: left;
             position: relative;
             overflow: hidden;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .option-btn:hover {
@@ -758,51 +761,54 @@
 
         <!-- 结果页面 -->
         <div class="page result-page" id="resultPage">
-            <div class="result-header">
-                <h2 class="result-title">🎉 测试结果</h2>
-                <p style="color: rgba(255,255,255,0.9);">基于25道题的专业分析</p>
-            </div>
-
-            <div class="score-container">
-                <span class="score-number" id="scoreNumber">0</span>
-                <span class="score-label">恋爱体质得分</span>
-            </div>
-
-            <div class="result-cards">
-                <div class="result-card">
-                    <span class="card-icon">🎭</span>
-                    <h3 class="card-title">恋爱人格类型</h3>
-                    <div class="card-content" id="personalityType"></div>
+            <!-- 保存截图区域 -->
+            <div id="resultCaptureArea" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 20px;">
+                <div class="result-header">
+                    <h2 class="result-title">🎉 测试结果</h2>
+                    <p style="color: rgba(255,255,255,0.9);">基于25道题的专业分析</p>
                 </div>
 
-                <div class="result-card">
-                    <span class="card-icon">💝</span>
-                    <h3 class="card-title">恋爱核心特质</h3>
-                    <div class="card-content" id="coreTraits"></div>
+                <div class="score-container">
+                    <span class="score-number" id="scoreNumber">0</span>
+                    <span class="score-label">恋爱体质得分</span>
                 </div>
 
-                <div class="result-card">
-                    <span class="card-icon">🔥</span>
-                    <h3 class="card-title">恋爱占有欲类型</h3>
-                    <div class="card-content" id="possessivenessType"></div>
+                <div class="result-cards">
+                    <div class="result-card">
+                        <span class="card-icon">🎭</span>
+                        <h3 class="card-title">恋爱人格类型</h3>
+                        <div class="card-content" id="personalityType"></div>
+                    </div>
+
+                    <div class="result-card">
+                        <span class="card-icon">💝</span>
+                        <h3 class="card-title">恋爱核心特质</h3>
+                        <div class="card-content" id="coreTraits"></div>
+                    </div>
+
+                    <div class="result-card">
+                        <span class="card-icon">🔥</span>
+                        <h3 class="card-title">恋爱占有欲类型</h3>
+                        <div class="card-content" id="possessivenessType"></div>
+                    </div>
+
+                    <div class="result-card">
+                        <span class="card-icon">💞</span>
+                        <h3 class="card-title">恋爱依恋人格</h3>
+                        <div class="card-content" id="attachmentType"></div>
+                    </div>
                 </div>
 
-                <div class="result-card">
-                    <span class="card-icon">💞</span>
-                    <h3 class="card-title">恋爱依恋人格</h3>
-                    <div class="card-content" id="attachmentType"></div>
-                </div>
-            </div>
-
-            <div class="charts-section">
-                <div class="chart-container">
-                    <h3 class="chart-title">📊 五维恋爱能力分析</h3>
-                    <div class="bar-chart" id="barChart"></div>
+                <div class="charts-section">
+                    <div class="chart-container">
+                        <h3 class="chart-title">📊 五维恋爱能力分析</h3>
+                        <div class="bar-chart" id="barChart"></div>
+                    </div>
                 </div>
             </div>
 
             <div class="button-group">
-                <button class="btn-action btn-share" onclick="shareResult()">📤 分享结果</button>
+                <button class="btn-action btn-share" onclick="saveResult()">💾 保存结果</button>
                 <button class="btn-action btn-retake" onclick="retakeTest()">🔄 重新测试</button>
             </div>
         </div>
@@ -1764,27 +1770,42 @@
         }
 
         /**
-         * 分享结果
+         * 保存结果
+         * 将测试结果保存为图片到用户相册
          */
-        function shareResult() {
-            const score = document.getElementById('scoreNumber').textContent;
-            const personalityType = document.querySelector('#personalityType .highlight').textContent;
-            const text = `我在恋爱体质测试中获得了${score}分！我的恋爱人格类型是${personalityType}，快来测测你的恋爱DNA吧！`;
-            const url = window.location.href;
+        function saveResult() {
+            const captureArea = document.getElementById('resultCaptureArea');
             
-            // 移动端优先使用Web Share API
-            if (navigator.share) {
-                navigator.share({
-                    title: '恋爱体质测试',
-                    text: text,
-                    url: url
-                }).catch(() => {
-                    showShareOptions(text, url);
-                });
-            } else {
-                // 桌面端显示分享选项
-                showShareOptions(text, url);
-            }
+            // 显示加载提示
+            showToast('正在生成图片...');
+            
+            // 使用html2canvas将结果区域转换为图片
+            html2canvas(captureArea, {
+                backgroundColor: null,
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                logging: false
+            }).then(canvas => {
+                // 将canvas转换为图片数据
+                const imageData = canvas.toDataURL('image/png');
+                
+                // 创建下载链接
+                const link = document.createElement('a');
+                link.download = `恋爱体质测试结果_${new Date().getTime()}.png`;
+                link.href = imageData;
+                
+                // 触发下载
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // 显示保存成功提示
+                showToast('保存成功');
+            }).catch(error => {
+                console.error('保存失败:', error);
+                showToast('保存失败，请重试');
+            });
         }
 
         /**
@@ -1812,11 +1833,18 @@
             shareContent.style.cssText = `
                 background: white;
                 border-radius: 20px;
-                padding: 30px;
+                padding: 20px;
                 max-width: 90%;
                 width: 400px;
                 box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                touch-action: manipulation;
             `;
+            
+            // 移动端适配
+            if (window.innerWidth <= 768) {
+                shareContent.style.padding = '15px';
+                shareContent.style.width = '95%';
+            }
             
             shareContent.innerHTML = `
                 <h3 style="color: var(--primary-color); margin-bottom: 20px; text-align: center;">分享你的测试结果</h3>
@@ -1824,15 +1852,15 @@
                     <p style="margin-bottom: 10px; color: var(--text-secondary);">${text}</p>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
-                    <button id="copyLinkBtn" style="padding: 12px; border: 2px solid var(--primary-color); border-radius: 10px; background: white; color: var(--primary-color); font-weight: 600; cursor: pointer; transition: all 0.3s ease;">复制链接</button>
-                    <button id="copyTextBtn" style="padding: 12px; border: 2px solid var(--secondary-color); border-radius: 10px; background: white; color: var(--secondary-color); font-weight: 600; cursor: pointer; transition: all 0.3s ease;">复制文本</button>
+                    <button id="copyLinkBtn" style="padding: 15px; border: 2px solid var(--primary-color); border-radius: 10px; background: white; color: var(--primary-color); font-weight: 600; cursor: pointer; transition: all 0.3s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">复制链接</button>
+                    <button id="copyTextBtn" style="padding: 15px; border: 2px solid var(--secondary-color); border-radius: 10px; background: white; color: var(--secondary-color); font-weight: 600; cursor: pointer; transition: all 0.3s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">复制文本</button>
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
-                    <a href="https://weibo.com/share/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}" target="_blank" style="flex: 1; min-width: 80px; padding: 10px; border: 2px solid #E6162D; border-radius: 10px; background: white; color: #E6162D; font-weight: 600; text-decoration: none; text-align: center; transition: all 0.3s ease;">微博</a>
-                    <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}" target="_blank" style="flex: 1; min-width: 80px; padding: 10px; border: 2px solid #1877F2; border-radius: 10px; background: white; color: #1877F2; font-weight: 600; text-decoration: none; text-align: center; transition: all 0.3s ease;">Facebook</a>
-                    <a href="https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}" target="_blank" style="flex: 1; min-width: 80px; padding: 10px; border: 2px solid #1DA1F2; border-radius: 10px; background: white; color: #1DA1F2; font-weight: 600; text-decoration: none; text-align: center; transition: all 0.3s ease;">Twitter</a>
+                    <a href="https://weibo.com/share/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}" target="_blank" style="flex: 1; min-width: 80px; padding: 12px; border: 2px solid #E6162D; border-radius: 10px; background: white; color: #E6162D; font-weight: 600; text-decoration: none; text-align: center; transition: all 0.3s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">微博</a>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}" target="_blank" style="flex: 1; min-width: 80px; padding: 12px; border: 2px solid #1877F2; border-radius: 10px; background: white; color: #1877F2; font-weight: 600; text-decoration: none; text-align: center; transition: all 0.3s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">Facebook</a>
+                    <a href="https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}" target="_blank" style="flex: 1; min-width: 80px; padding: 12px; border: 2px solid #1DA1F2; border-radius: 10px; background: white; color: #1DA1F2; font-weight: 600; text-decoration: none; text-align: center; transition: all 0.3s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">Twitter</a>
                 </div>
-                <button id="closeShareBtn" style="width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--text-secondary); color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">关闭</button>
+                <button id="closeShareBtn" style="width: 100%; padding: 15px; border: none; border-radius: 10px; background: var(--text-secondary); color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">关闭</button>
             `;
             
             shareModal.appendChild(shareContent);
@@ -1867,7 +1895,7 @@
             // 优先使用现代API
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(text).then(() => {
-                    showToast('结果已复制到剪贴板！');
+                    showToast('链接已复制');
                 }).catch(() => {
                     // 现代API失败时使用备用方案
                     fallbackCopyTextToClipboard(text);
@@ -1905,7 +1933,7 @@
             try {
                 const successful = document.execCommand('copy');
                 if (successful) {
-                    showToast('结果已复制到剪贴板！');
+                    showToast('链接已复制');
                 } else {
                     showToast('复制失败，请手动复制');
                 }
@@ -1934,9 +1962,6 @@
          */
         function retakeTest() {
             switchPage('resultPage', 'homePage');
-            setTimeout(() => {
-                startTest();
-            }, 400);
         }
     </script>
 </body>
