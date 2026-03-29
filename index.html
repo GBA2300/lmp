@@ -1096,6 +1096,7 @@
         let currentQuestion = 0;
         let totalScore = 0;
         let answers = [];
+        let cachedResults = null;
         
         // 维度分数
         let dimensions = {
@@ -1164,6 +1165,15 @@
             };
             // 清除缓存
             cachedResults = null;
+            
+            // 确保测试页面元素正确显示
+            const questionCard = document.getElementById('questionCard');
+            const progressContainer = document.querySelector('.progress-container');
+            const loading = document.getElementById('loading');
+            
+            if (questionCard) questionCard.style.display = 'block';
+            if (progressContainer) progressContainer.style.display = 'block';
+            if (loading) loading.classList.remove('active');
             
             switchPage('homePage', 'testPage');
             setTimeout(() => {
@@ -1341,9 +1351,6 @@
          * 计算测试结果
          * 分析各维度数据，生成结果
          */
-        // 缓存计算结果
-        let cachedResults = null;
-        
         function calculateResults() {
             if (cachedResults) return cachedResults;
             
@@ -1512,171 +1519,119 @@
                 attachment: Math.min(100, Math.round((dimensions.attachment / dimensionMaxScores.attachment) * 100)),
                 trust: Math.min(100, Math.round((dimensions.trust / dimensionMaxScores.trust) * 100))
             };
+
+            // 根据各维度分数确定特质
+            if (scores.passion > 70) traits.push("热情主动，喜欢制造浪漫");
+            if (scores.passion > 50 && scores.passion <= 70) traits.push("适度热情，懂得表达爱意");
+            if (scores.passion <= 50) traits.push("内敛含蓄，用行动代替言语");
             
-            // 按分数排序，优先显示高分特质
-            const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+            if (scores.rationality > 70) traits.push("理性冷静，善于分析问题");
+            if (scores.rationality > 50 && scores.rationality <= 70) traits.push("理性与感性平衡");
+            if (scores.rationality <= 50) traits.push("感性为主，跟随内心");
             
-            // 特质描述映射
-            const traitDescriptions = {
-                passion: {
-                    high: "🔥 对爱情充满热情，善于制造浪漫氛围",
-                    medium: "🌟 有一定的浪漫细胞，愿意为爱情付出"
-                },
-                rationality: {
-                    high: "🧠 遇事冷静，能够理性分析和解决问题",
-                    medium: "⚖️ 能够在情感和理性之间找到平衡"
-                },
-                emotional: {
-                    high: "💝 情感细腻，能够敏锐感知伴侣情绪",
-                    medium: "❤️ 重视情感交流，愿意表达内心感受"
-                },
-                attachment: {
-                    high: "🔒 平衡的依恋模式，既重视亲密又保持独立",
-                    medium: "💕 在亲密与独立之间找到良好平衡"
-                },
-                trust: {
-                    high: "💞 懂得信任，能够给予伴侣足够的空间",
-                    medium: "🤝 基本信任伴侣，能够保持健康的关系边界"
-                }
-            };
+            if (scores.emotional > 70) traits.push("情感丰富，敏感细腻");
+            if (scores.emotional > 50 && scores.emotional <= 70) traits.push("情感表达适度");
+            if (scores.emotional <= 50) traits.push("情绪稳定，不易波动");
             
-            // 最多显示4个特质，优先显示高分
-            let count = 0;
-            for (const [dim, score] of sortedScores) {
-                if (score > 70) {
-                    traits.push(traitDescriptions[dim].high);
-                    count++;
-                } else if (score > 50 && count < 4) {
-                    traits.push(traitDescriptions[dim].medium);
-                    count++;
-                }
-                if (count >= 4) break;
-            }
+            if (scores.attachment > 70) traits.push("重视亲密，需要陪伴");
+            if (scores.attachment > 50 && scores.attachment <= 70) traits.push("亲密与独立平衡");
+            if (scores.attachment <= 50) traits.push("独立自主，享受个人空间");
             
-            if (traits.length === 0) {
-                traits.push("🌱 正在成长中，有很大的恋爱潜力");
-                traits.push("🌟 各方面都在均衡发展");
-            }
+            if (scores.trust > 70) traits.push("高度信任，安全感强");
+            if (scores.trust > 50 && scores.trust <= 70) traits.push("基本信任，偶有疑虑");
+            if (scores.trust <= 50) traits.push("谨慎小心，需要更多安全感");
             
-            return traits.join("<br><br>");
+            return traits.join("、");
         }
 
         /**
          * 确定占有欲类型
-         * 基于possessiveness维度判断
          */
         function determinePossessiveness() {
-            // 计算各维度的最大可能分数
             const dimensionMaxScores = {
                 attachment: [4, 10, 13, 14].reduce((sum, idx) => sum + Math.max(...questions[idx].options.map(o => o.score)), 0)
             };
             
-            // 计算占有欲百分比（基于依恋维度），确保不超过100%
-            const possessivenessPercent = Math.min(100, Math.round((dimensions.attachment / dimensionMaxScores.attachment) * 100));
+            const attachmentPercent = Math.min(100, Math.round((dimensions.attachment / dimensionMaxScores.attachment) * 100));
             
-            if (possessivenessPercent > 80) {
+            if (attachmentPercent >= 80) {
                 return {
-                    type: "🔐 高占有欲型",
-                    desc: "你的占有欲比较强，希望时刻了解伴侣的动向。这源于你对感情的重视和不安全感。试着学会信任对方，给彼此一些空间，关系会更轻松愉快。培养自己的兴趣爱好，减少对伴侣的过度依赖。"
+                    type: "🔥 高度占有欲型",
+                    desc: "你对伴侣有较强的占有欲，希望对方时刻关注你。适度的占有欲是爱的表现，但过度可能会给对方压力。建议学会给予彼此适当的空间。"
                 };
-            } else if (possessivenessPercent > 40) {
+            } else if (attachmentPercent >= 60) {
                 return {
-                    type: "🔒 中等占有欲型",
-                    desc: "你的占有欲适中，既重视与伴侣的亲密关系，又能给对方适当的空间。这是比较健康的恋爱状态，懂得平衡亲密与自由。继续保持这种平衡，让关系稳定发展。"
+                    type: "💝 适度关注型",
+                    desc: "你会关注伴侣的动态，但不会过度干涉。这种适度的关注让伴侣感到被在乎，同时又有自己的空间。"
+                };
+            } else if (attachmentPercent >= 40) {
+                return {
+                    type: "🌟 平衡独立型",
+                    desc: "你在亲密与独立之间找到了很好的平衡。既重视关系，又尊重彼此的个人空间，这是健康的恋爱模式。"
                 };
             } else {
                 return {
-                    type: "🔓 低占有欲型",
-                    desc: "你的占有欲较低，非常尊重伴侣的个人空间和自由。这种特质让伴侣感到轻松，但有时可能会让对方觉得你不够在意。适当表达在意和关心，让对方感受到被重视。"
+                    type: "🕊️ 自由独立型",
+                    desc: "你非常重视个人空间和独立性。这种特质让你不会过度依赖伴侣，但也要注意给予对方足够的关注和安全感。"
                 };
             }
         }
 
         /**
-         * 确定依恋人格类型
-         * 基于emotional和trust维度判断
+         * 确定依恋类型
          */
         function determineAttachment() {
             const dimensionMaxScores = {
-                emotional: [0, 2, 6, 16, 18, 19, 24].reduce((sum, idx) => sum + Math.max(...questions[idx].options.map(o => o.score)), 0),
                 attachment: [4, 10, 13, 14].reduce((sum, idx) => sum + Math.max(...questions[idx].options.map(o => o.score)), 0),
                 trust: [9, 12, 21].reduce((sum, idx) => sum + Math.max(...questions[idx].options.map(o => o.score)), 0)
             };
             
-            // 计算各维度百分比，确保不超过100%
-            const emotionalPercent = Math.min(100, Math.round((dimensions.emotional / dimensionMaxScores.emotional) * 100));
             const attachmentPercent = Math.min(100, Math.round((dimensions.attachment / dimensionMaxScores.attachment) * 100));
             const trustPercent = Math.min(100, Math.round((dimensions.trust / dimensionMaxScores.trust) * 100));
             
-            // 安全型：高信任度 + 平衡的情绪
-            if (trustPercent > 70) {
-                if (emotionalPercent >= 60 && emotionalPercent <= 80) {
-                    return {
-                        type: "💝 安全依恋型",
-                        desc: "你拥有健康的依恋模式！在关系中既能亲密依赖，又能保持独立。你信任伴侣，也相信自己值得被爱。这种安全感让你在恋爱中从容自信，是最理想的依恋类型。"
-                    };
-                } else if (emotionalPercent > 80) {
-                    return {
-                        type: "💕 安全-焦虑混合型",
-                        desc: "你基本是安全型依恋，但有时会表现出焦虑的特质。你信任伴侣，但也在意对方的回应。这种平衡的状态是健康的，适当的情感表达能让关系更亲密。"
-                    };
-                } else {
-                    return {
-                        type: "🛡️ 安全-回避混合型",
-                        desc: "你基本是安全型依恋，但有时会表现出回避的特质。你信任伴侣，但也重视个人空间。这种平衡能让你在关系中保持自我，同时享受亲密。"
-                    };
-                }
+            // 安全型：信任度高，依恋适中
+            if (trustPercent >= 60 && attachmentPercent >= 40 && attachmentPercent <= 75) {
+                return {
+                    type: "💚 安全依恋型",
+                    desc: "你拥有最健康的依恋模式！在关系中感到安全，既能够亲密依赖，又保持自我。你信任伴侣，也相信自己值得被爱。这种依恋模式让你能够建立稳定、满足的亲密关系。"
+                };
             }
-            // 焦虑型：高情绪 + 高依恋
-            else if (emotionalPercent > 70) {
-                if (attachmentPercent > 65) {
-                    return {
-                        type: "💓 焦虑依恋型",
-                        desc: "你对亲密关系有强烈的渴望，害怕被抛弃。你非常在意伴侣的关注和回应，容易因为对方的行为而情绪波动。建议学会自我安抚，建立内在安全感，不要过度依赖伴侣的反馈来确认自己的价值。"
-                    };
-                } else if (trustPercent < 50) {
-                    return {
-                        type: "😰 恐惧依恋型",
-                        desc: "你既渴望亲密又害怕受伤，内心常常充满矛盾。你想要被爱，但又担心被伤害，这种纠结让你在感情中举步维艰。建议先学会爱自己，建立自信，慢慢培养对他人的信任。"
-                    };
-                }
+            // 焦虑型：依恋度高，信任度低
+            else if (attachmentPercent > 75 && trustPercent < 60) {
+                return {
+                    type: "💛 焦虑依恋型",
+                    desc: "你渴望亲密关系，但常常担心被抛弃。你需要很多确认和保证来感到安全。建议学会自我安抚，建立内在的安全感，不要过度依赖伴侣的回应来确认自己的价值。"
+                };
             }
-            // 回避型：低依恋 + 低情绪
-            if (attachmentPercent < 40) {
-                if (emotionalPercent < 60) {
-                    return {
-                        type: "🛡️ 回避依恋型",
-                        desc: "你重视独立和个人空间，不太习惯过度亲密。当关系变得太紧密时，你可能会想要退缩。这源于对失去自我的恐惧。试着慢慢敞开心扉，适度依赖他人并不会让你变得脆弱。"
-                    };
-                } else if (trustPercent < 60) {
-                    return {
-                        type: "😶 回避-恐惧混合型",
-                        desc: "你既重视独立，又对亲密关系有些恐惧。你害怕在关系中失去自我，也担心受到伤害。建议在保持自我的同时，尝试建立对他人的信任，找到平衡。"
-                    };
-                }
+            // 回避型：依恋度低，独立性强
+            else if (attachmentPercent < 40 && trustPercent >= 50) {
+                return {
+                    type: "💙 回避依恋型",
+                    desc: "你重视独立和个人空间，不太习惯依赖他人。当关系太亲密时，你可能会感到不适而想要退缩。建议尝试慢慢敞开心扉，允许自己脆弱和依赖。"
+                };
             }
-            // 偏安全型：中等信任 + 平衡情绪
-            if (trustPercent >= 50 && trustPercent <= 70) {
-                if (Math.abs(emotionalPercent - 65) < 15) {
-                    return {
-                        type: "🌟 偏安全依恋型",
-                        desc: "你接近安全型依恋！你在关系中基本感到安全，能够信任伴侣，也保持自我。继续培养信任感，你的依恋模式会更加健康。"
-                    };
-                }
+            // 恐惧型：依恋度高，信任度低，害怕亲密
+            else if (attachmentPercent > 75 && trustPercent < 50) {
+                return {
+                    type: "💜 恐惧依恋型",
+                    desc: "你既渴望亲密又害怕受伤，这种矛盾让你在感情中感到困扰。建议通过自我成长和心理咨询来疗愈过去的伤痛，学会建立健康的亲密关系。"
+                };
             }
-            // 默认：混合型
-            return {
-                type: "🌈 混合依恋型",
-                desc: "你的依恋模式比较复杂，在不同情境下会表现出不同特点。有时你像安全型一样从容，有时又会焦虑或回避。这种灵活性是优势，建议你多观察自己在关系中的反应模式，有意识地培养更健康的依恋方式。"
-            };
+            // 默认安全型
+            else {
+                return {
+                    type: "💚 安全依恋型",
+                    desc: "你在关系中表现出较好的安全感。能够平衡亲密与独立，信任伴侣的同时也保持自我。继续保持这种健康的依恋模式，你的感情会越来越稳定幸福。"
+                };
+            }
         }
 
         /**
          * 显示测试结果
-         * 在结果页面展示所有分析数据
          */
         function displayResults() {
             const results = calculateResults();
+            cachedResults = results;
             
             // 显示总分
             const scoreNumber = document.getElementById('scoreNumber');
@@ -1685,32 +1640,74 @@
             // 显示人格类型
             document.getElementById('personalityType').innerHTML = `
                 <div class="highlight">${results.personality.type}</div>
-                <p style="margin-top: 15px;">${results.personality.desc}</p>
+                <p style="margin-top: 10px;">${results.personality.desc}</p>
             `;
             
             // 显示核心特质
-            document.getElementById('coreTraits').innerHTML = results.traits;
+            document.getElementById('coreTraits').innerHTML = `
+                <div class="highlight">你的恋爱特质</div>
+                <p style="margin-top: 10px;">${results.traits}</p>
+            `;
             
             // 显示占有欲类型
             document.getElementById('possessivenessType').innerHTML = `
                 <div class="highlight">${results.possessiveness.type}</div>
-                <p style="margin-top: 15px;">${results.possessiveness.desc}</p>
+                <p style="margin-top: 10px;">${results.possessiveness.desc}</p>
             `;
             
             // 显示依恋类型
             document.getElementById('attachmentType').innerHTML = `
                 <div class="highlight">${results.attachment.type}</div>
-                <p style="margin-top: 15px;">${results.attachment.desc}</p>
+                <p style="margin-top: 10px;">${results.attachment.desc}</p>
             `;
             
-            // 显示六维图表
-            displayBarChart(results.dimensions);
+            // 显示维度图表
+            displayDimensionChart(results.dimensions);
         }
 
         /**
-         * 数字动画效果
-         * @param {HTMLElement} element - 目标元素
-         * @param {number} target - 目标数值
+         * 显示维度分析图表
+         */
+        function displayDimensionChart(dimensions) {
+            const barChart = document.getElementById('barChart');
+            const dimNames = {
+                passion: '热情度',
+                rationality: '理性度',
+                emotional: '情绪度',
+                attachment: '依恋度',
+                trust: '信任度'
+            };
+            const dimColors = {
+                passion: 'linear-gradient(90deg, #FF6B9D, #FF8E53)',
+                rationality: 'linear-gradient(90deg, #4ECDC4, #44A08D)',
+                emotional: 'linear-gradient(90deg, #A8EDEA, #FED6E3)',
+                attachment: 'linear-gradient(90deg, #D299C2, #FEF9D7)',
+                trust: 'linear-gradient(90deg, #89F7FE, #66A6FF)'
+            };
+            
+            barChart.innerHTML = '';
+            
+            Object.entries(dimensions).forEach(([key, value]) => {
+                const barItem = document.createElement('div');
+                barItem.className = 'bar-item';
+                barItem.innerHTML = `
+                    <div class="bar-label">${dimNames[key]}</div>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width: 0%; background: ${dimColors[key]};"></div>
+                    </div>
+                    <div class="bar-value">${value}%</div>
+                `;
+                barChart.appendChild(barItem);
+                
+                // 动画效果
+                setTimeout(() => {
+                    barItem.querySelector('.bar-fill').style.width = value + '%';
+                }, 100);
+            });
+        }
+
+        /**
+         * 数字动画
          */
         function animateNumber(element, target) {
             let current = 0;
@@ -1726,242 +1723,76 @@
         }
 
         /**
-         * 显示柱状图
-         * @param {Object} dimensions - 各维度分数
-         */
-        function displayBarChart(dimensions) {
-            const barChart = document.getElementById('barChart');
-            const dimensionNames = {
-                passion: '热情度',
-                rationality: '理性度',
-                emotional: '情绪度',
-                attachment: '依恋度',
-                trust: '信任度'
-            };
-            
-            const dimensionColors = {
-                passion: 'linear-gradient(90deg, #FF6B9D, #FF8E53)',
-                rationality: 'linear-gradient(90deg, #667eea, #764ba2)',
-                emotional: 'linear-gradient(90deg, #f093fb, #f5576c)',
-                attachment: 'linear-gradient(90deg, #fa709a, #fee140)',
-                trust: 'linear-gradient(90deg, #a8edea, #fed6e3)'
-            };
-            
-            barChart.innerHTML = '';
-            
-            Object.keys(dimensions).forEach((key, index) => {
-                const percent = dimensions[key];
-                const barItem = document.createElement('div');
-                barItem.className = 'bar-item';
-                barItem.innerHTML = `
-                    <div class="bar-label">${dimensionNames[key]}</div>
-                    <div class="bar-track">
-                        <div class="bar-fill" style="width: 0%; background: ${dimensionColors[key]};"></div>
-                    </div>
-                    <div class="bar-value">${percent}%</div>
-                `;
-                barChart.appendChild(barItem);
-                
-                // 动画效果
-                setTimeout(() => {
-                    barItem.querySelector('.bar-fill').style.width = percent + '%';
-                }, 100 + index * 100);
-            });
-        }
-
-        /**
          * 保存结果
-         * 将测试结果保存为图片到用户相册
+         * 使用html2canvas将结果保存为图片
          */
         function saveResult() {
             const captureArea = document.getElementById('resultCaptureArea');
             
-            // 显示加载提示
+            if (!captureArea) {
+                showToast('保存失败，请重试');
+                return;
+            }
+            
             showToast('正在生成图片...');
             
-            // 使用html2canvas将结果区域转换为图片
             html2canvas(captureArea, {
                 backgroundColor: null,
                 scale: 2,
                 useCORS: true,
-                allowTaint: true,
-                logging: false
+                allowTaint: true
             }).then(canvas => {
-                // 将canvas转换为图片数据
-                const imageData = canvas.toDataURL('image/png');
-                
                 // 创建下载链接
                 const link = document.createElement('a');
-                link.download = `恋爱体质测试结果_${new Date().getTime()}.png`;
-                link.href = imageData;
-                
-                // 触发下载
-                document.body.appendChild(link);
+                link.download = '恋爱体质测试结果_' + new Date().getTime() + '.png';
+                link.href = canvas.toDataURL('image/png');
                 link.click();
-                document.body.removeChild(link);
                 
-                // 显示保存成功提示
-                showToast('保存成功');
-            }).catch(error => {
-                console.error('保存失败:', error);
+                showToast('保存成功！图片已下载');
+            }).catch(err => {
+                console.error('保存失败:', err);
                 showToast('保存失败，请重试');
             });
-        }
-
-        /**
-         * 显示分享选项
-         * @param {string} text - 分享文本
-         * @param {string} url - 分享链接
-         */
-        function showShareOptions(text, url) {
-            // 创建分享选项弹窗
-            const shareModal = document.createElement('div');
-            shareModal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.5);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-            `;
-            
-            const shareContent = document.createElement('div');
-            shareContent.style.cssText = `
-                background: white;
-                border-radius: 20px;
-                padding: 20px;
-                max-width: 90%;
-                width: 400px;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                touch-action: manipulation;
-            `;
-            
-            // 移动端适配
-            if (window.innerWidth <= 768) {
-                shareContent.style.padding = '15px';
-                shareContent.style.width = '95%';
-            }
-            
-            shareContent.innerHTML = `
-                <h3 style="color: var(--primary-color); margin-bottom: 20px; text-align: center;">分享你的测试结果</h3>
-                <div style="margin-bottom: 20px;">
-                    <p style="margin-bottom: 10px; color: var(--text-secondary);">${text}</p>
-                </div>
-                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
-                    <button id="copyLinkBtn" style="padding: 15px; border: 2px solid var(--primary-color); border-radius: 10px; background: white; color: var(--primary-color); font-weight: 600; cursor: pointer; transition: all 0.3s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">复制链接</button>
-                    <button id="copyTextBtn" style="padding: 15px; border: 2px solid var(--secondary-color); border-radius: 10px; background: white; color: var(--secondary-color); font-weight: 600; cursor: pointer; transition: all 0.3s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">复制文本</button>
-                </div>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
-                    <a href="https://weibo.com/share/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}" target="_blank" style="flex: 1; min-width: 80px; padding: 12px; border: 2px solid #E6162D; border-radius: 10px; background: white; color: #E6162D; font-weight: 600; text-decoration: none; text-align: center; transition: all 0.3s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">微博</a>
-                    <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}" target="_blank" style="flex: 1; min-width: 80px; padding: 12px; border: 2px solid #1877F2; border-radius: 10px; background: white; color: #1877F2; font-weight: 600; text-decoration: none; text-align: center; transition: all 0.3s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">Facebook</a>
-                    <a href="https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}" target="_blank" style="flex: 1; min-width: 80px; padding: 12px; border: 2px solid #1DA1F2; border-radius: 10px; background: white; color: #1DA1F2; font-weight: 600; text-decoration: none; text-align: center; transition: all 0.3s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">Twitter</a>
-                </div>
-                <button id="closeShareBtn" style="width: 100%; padding: 15px; border: none; border-radius: 10px; background: var(--text-secondary); color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">关闭</button>
-            `;
-            
-            shareModal.appendChild(shareContent);
-            document.body.appendChild(shareModal);
-            
-            // 添加按钮事件
-            document.getElementById('copyLinkBtn').addEventListener('click', () => {
-                copyToClipboard(url);
-            });
-            
-            document.getElementById('copyTextBtn').addEventListener('click', () => {
-                copyToClipboard(text);
-            });
-            
-            document.getElementById('closeShareBtn').addEventListener('click', () => {
-                document.body.removeChild(shareModal);
-            });
-            
-            // 点击外部关闭
-            shareModal.addEventListener('click', (e) => {
-                if (e.target === shareModal) {
-                    document.body.removeChild(shareModal);
-                }
-            });
-        }
-
-        /**
-         * 复制到剪贴板
-         * @param {string} text - 要复制的文本
-         */
-        function copyToClipboard(text) {
-            // 优先使用现代API
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(text).then(() => {
-                    showToast('链接已复制');
-                }).catch(() => {
-                    // 现代API失败时使用备用方案
-                    fallbackCopyTextToClipboard(text);
-                });
-            } else {
-                // 不支持现代API时使用备用方案
-                fallbackCopyTextToClipboard(text);
-            }
-        }
-
-        /**
-         * 复制到剪贴板的备用方案
-         * @param {string} text - 要复制的文本
-         */
-        function fallbackCopyTextToClipboard(text) {
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            
-            // 设置样式使其不可见
-            textArea.style.position = 'fixed';
-            textArea.style.left = '-999999px';
-            textArea.style.top = '-999999px';
-            textArea.style.width = '2em';
-            textArea.style.height = '2em';
-            textArea.style.padding = '0';
-            textArea.style.border = 'none';
-            textArea.style.outline = 'none';
-            textArea.style.boxShadow = 'none';
-            textArea.style.background = 'transparent';
-            
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    showToast('链接已复制');
-                } else {
-                    showToast('复制失败，请手动复制');
-                }
-            } catch (err) {
-                showToast('复制失败，请手动复制');
-            } finally {
-                document.body.removeChild(textArea);
-            }
-        }
-
-        /**
-         * 显示Toast提示
-         * @param {string} message - 提示消息
-         */
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
         }
 
         /**
          * 重新测试
          */
         function retakeTest() {
-            switchPage('resultPage', 'homePage');
+            // 重置所有状态
+            currentQuestion = 0;
+            totalScore = 0;
+            answers = [];
+            dimensions = {
+                passion: 0,
+                rationality: 0,
+                emotional: 0,
+                attachment: 0,
+                trust: 0
+            };
+            cachedResults = null;
+            
+            // 切换回首页
+            const homePage = document.getElementById('homePage');
+            const resultPage = document.getElementById('resultPage');
+            
+            resultPage.classList.remove('active');
+            setTimeout(() => {
+                homePage.classList.add('active');
+            }, 300);
+        }
+
+        /**
+         * 显示Toast提示
+         */
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
         }
     </script>
 </body>
