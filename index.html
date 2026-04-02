@@ -453,45 +453,53 @@
             margin-bottom: 25px;
         }
 
-        .bar-chart {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .bar-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .bar-label {
-            width: 120px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-        }
-
-        .bar-track {
-            flex: 1;
-            height: 16px;
-            background: #f0f0f0;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .bar-fill {
-            height: 100%;
-            border-radius: 8px;
-            transition: width 1s ease;
+        .radar-chart {
             position: relative;
+            width: 100%;
+            height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        .bar-value {
-            width: 50px;
-            font-weight: 700;
-            color: var(--text-primary);
-            font-size: 0.95rem;
+        .radar-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .radar-grid {
+            stroke: #e0e0e0;
+            stroke-width: 1;
+            fill: none;
+        }
+
+        .radar-axis {
+            stroke: #666;
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        .radar-area {
+            fill: rgba(255, 107, 157, 0.2);
+            stroke: #FF6B9D;
+            stroke-width: 2;
+            transition: all 1s ease;
+        }
+
+        .radar-point {
+            fill: #FF6B9D;
+            stroke: white;
+            stroke-width: 2;
+            r: 5;
+            transition: all 1s ease;
+        }
+
+        .radar-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            fill: var(--text-secondary);
+            text-anchor: middle;
+            dominant-baseline: middle;
         }
 
         /* 按钮组 */
@@ -802,7 +810,7 @@
                 <div class="charts-section">
                     <div class="chart-container">
                         <h3 class="chart-title">📊 五维恋爱能力分析</h3>
-                        <div class="bar-chart" id="barChart"></div>
+                        <div class="radar-chart" id="radarChart"></div>
                     </div>
                 </div>
             </div>
@@ -977,7 +985,7 @@
                     { emoji: "🔥", text: "当场炸毛，'那你去追TA啊'", score: 9 },
                     { emoji: "😌", text: "淡定淡定，谁还没眼光", score: 5 },
                     { emoji: "😏", text: "暗戳戳吃醋，但不说出来", score: 7 },
-                    { emoji: "🤳", text: "立即自拍，'看看我更好看'", score: 6 }
+                    { emoji: "🤳", text: "立即自拍，'看看谁更好看'", score: 6 }
                 ]
             },
             {
@@ -994,9 +1002,9 @@
                 emoji: "🎤",
                 question: "去KTV，你的表现是？",
                 options: [
-                    { emoji: "🎤", text: "麦霸上身，不让别人唱", score: 7 },
-                    { emoji: "👏", text: "只听不唱，做忠实观众", score: 4 },
-                    { emoji: "🎵", text: "只唱情歌，每首都是给TA的", score: 8 },
+                    { emoji: "🎤", text: "麦霸上身，不让别人唱", score: 4 },
+                    { emoji: "👏", text: "只听不唱，做忠实观众", score: 7 },
+                    { emoji: "🎵", text: "唱情歌，每首都是给TA的", score: 8 },
                     { emoji: "😴", text: "找个角落睡觉", score: 3 }
                 ]
             },
@@ -1014,29 +1022,29 @@
                 emoji: "💰",
                 question: "关于经济问题，你的看法？",
                 options: [
-                    { emoji: "💳", text: "AA制，各花各的", score: 5 },
-                    { emoji: "💰", text: "男方多出一些，表示照顾", score: 6 },
-                    { emoji: "🏦", text: "建立共同账户，一起管理", score: 7 },
-                    { emoji: "🤝", text: "有钱的多出，没钱的出力", score: 8 }
+                    { emoji: "💳", text: "AA制，各花各的", score: 7 },
+                    { emoji: "💰", text: "男方多出一些，表示照顾", score: 5 },
+                    { emoji: "🏦", text: "建立共同账户，一起管理", score: 8 },
+                    { emoji: "🤝", text: "有钱的多出，没钱的出力", score: 6 }
                 ]
             },
             {
                 emoji: "😴",
                 question: "关于睡姿，你更喜欢？",
                 options: [
-                    { emoji: "🤗", text: "抱在一起睡，超有安全感", score: 8 },
+                    { emoji: "🤗", text: "抱在一起睡，超有安全感", score: 9 },
                     { emoji: "😴", text: "各睡各的，互不打扰", score: 4 },
                     { emoji: "🤝", text: "偶尔抱抱，平时分开", score: 6 },
-                    { emoji: "🤚", text: "一定要牵着手才能睡着", score: 9 }
+                    { emoji: "🤚", text: "一定要牵着手才能睡着", score: 8 }
                 ]
             },
             {
                 emoji: "🎭",
                 question: "伴侣提出冷静一下，你会？",
                 options: [
-                    { emoji: "😭", text: "崩溃大哭，'你是不爱我了'", score: 9 },
-                    { emoji: "🧘", text: "给TA空间，自己也冷静一下", score: 6 },
-                    { emoji: "🤝", text: "立即沟通，解决问题最重要", score: 7 },
+                    { emoji: "😭", text: "崩溃大哭，'你是不爱我了'", score: 6 },
+                    { emoji: "🧘", text: "给TA空间，自己也冷静一下", score: 7 },
+                    { emoji: "🤝", text: "立即沟通，解决问题最重要", score: 9 },
                     { emoji: "❄️", text: "好，那我也冷静一下", score: 5 }
                 ]
             },
@@ -1593,7 +1601,7 @@
             if (trustPercent >= 60 && attachmentPercent >= 40 && attachmentPercent <= 75) {
                 return {
                     type: "💚 安全依恋型",
-                    desc: "你拥有最健康的依恋模式！在关系中感到安全，既能够亲密依赖，又保持自我。你信任伴侣，也相信自己值得被爱。这种依恋模式让你能够建立稳定、满足的亲密关系。"
+                    desc: "你拥有健康的依恋模式！在关系中感到安全，既能够亲密依赖，又保持自我。你信任伴侣，也相信自己值得被爱。这种依恋模式让你能够建立稳定、满足的亲密关系。"
                 };
             }
             // 焦虑型：依恋度高，信任度低
@@ -1662,14 +1670,14 @@
             `;
             
             // 显示维度图表
-            displayDimensionChart(results.dimensions);
+            displayRadarChart(results.dimensions);
         }
 
         /**
-         * 显示维度分析图表
+         * 显示雷达图分析
          */
-        function displayDimensionChart(dimensions) {
-            const barChart = document.getElementById('barChart');
+        function displayRadarChart(dimensions) {
+            const radarChart = document.getElementById('radarChart');
             const dimNames = {
                 passion: '热情度',
                 rationality: '理性度',
@@ -1677,33 +1685,137 @@
                 attachment: '依恋度',
                 trust: '信任度'
             };
-            const dimColors = {
-                passion: 'linear-gradient(90deg, #FF6B9D, #FF8E53)',
-                rationality: 'linear-gradient(90deg, #4ECDC4, #44A08D)',
-                emotional: 'linear-gradient(90deg, #A8EDEA, #FED6E3)',
-                attachment: 'linear-gradient(90deg, #D299C2, #FEF9D7)',
-                trust: 'linear-gradient(90deg, #89F7FE, #66A6FF)'
-            };
             
-            barChart.innerHTML = '';
+            // 清空容器
+            radarChart.innerHTML = '';
             
-            Object.entries(dimensions).forEach(([key, value]) => {
-                const barItem = document.createElement('div');
-                barItem.className = 'bar-item';
-                barItem.innerHTML = `
-                    <div class="bar-label">${dimNames[key]}</div>
-                    <div class="bar-track">
-                        <div class="bar-fill" style="width: 0%; background: ${dimColors[key]};"></div>
-                    </div>
-                    <div class="bar-value">${value}%</div>
-                `;
-                barChart.appendChild(barItem);
+            // 创建SVG
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.className = 'radar-svg';
+            svg.setAttribute('viewBox', '0 0 400 400');
+            radarChart.appendChild(svg);
+            
+            // 中心点
+            const centerX = 200;
+            const centerY = 200;
+            const radius = 150;
+            
+            // 维度数量
+            const dimensionsArray = Object.entries(dimensions);
+            const numDimensions = dimensionsArray.length;
+            const angleStep = (2 * Math.PI) / numDimensions;
+            
+            // 绘制网格
+            for (let level = 1; level <= 5; level++) {
+                const levelRadius = (radius / 5) * level;
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                let pathData = '';
+                
+                for (let i = 0; i < numDimensions; i++) {
+                    const angle = i * angleStep - Math.PI / 2;
+                    const x = centerX + levelRadius * Math.cos(angle);
+                    const y = centerY + levelRadius * Math.sin(angle);
+                    
+                    if (i === 0) {
+                        pathData += `M ${x} ${y}`;
+                    } else {
+                        pathData += ` L ${x} ${y}`;
+                    }
+                }
+                
+                pathData += ' Z';
+                path.setAttribute('d', pathData);
+                path.setAttribute('class', 'radar-grid');
+                svg.appendChild(path);
+            }
+            
+            // 绘制轴线和标签
+            dimensionsArray.forEach(([key, value], index) => {
+                const angle = index * angleStep - Math.PI / 2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                
+                // 轴线
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', centerX);
+                line.setAttribute('y1', centerY);
+                line.setAttribute('x2', x);
+                line.setAttribute('y2', y);
+                line.setAttribute('class', 'radar-axis');
+                svg.appendChild(line);
+                
+                // 标签
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                const labelX = centerX + (radius + 20) * Math.cos(angle);
+                const labelY = centerY + (radius + 20) * Math.sin(angle);
+                label.setAttribute('x', labelX);
+                label.setAttribute('y', labelY);
+                label.setAttribute('class', 'radar-label');
+                label.textContent = dimNames[key];
+                svg.appendChild(label);
+            });
+            
+            // 绘制数据区域
+            let areaPathData = '';
+            const points = [];
+            
+            dimensionsArray.forEach(([key, value], index) => {
+                const angle = index * angleStep - Math.PI / 2;
+                const pointRadius = (radius * value) / 100;
+                const x = centerX + pointRadius * Math.cos(angle);
+                const y = centerY + pointRadius * Math.sin(angle);
+                
+                points.push({ x, y, value });
+                
+                if (index === 0) {
+                    areaPathData += `M ${x} ${y}`;
+                } else {
+                    areaPathData += ` L ${x} ${y}`;
+                }
+            });
+            
+            areaPathData += ' Z';
+            
+            const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            area.setAttribute('d', areaPathData);
+            area.setAttribute('class', 'radar-area');
+            area.setAttribute('opacity', '0');
+            svg.appendChild(area);
+            
+            // 绘制数据点和百分比标签
+            points.forEach((point, index) => {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', point.x);
+                circle.setAttribute('cy', point.y);
+                circle.setAttribute('r', '0');
+                circle.setAttribute('class', 'radar-point');
+                svg.appendChild(circle);
+                
+                // 添加百分比标签
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                const labelX = point.x + (point.x > centerX ? 10 : -30);
+                const labelY = point.y + (point.y > centerY ? 15 : -10);
+                label.setAttribute('x', labelX);
+                label.setAttribute('y', labelY);
+                label.setAttribute('font-size', '12px');
+                label.setAttribute('font-weight', '700');
+                label.setAttribute('fill', '#FF6B9D');
+                label.setAttribute('text-anchor', 'middle');
+                label.textContent = point.value + '%';
+                label.setAttribute('opacity', '0');
+                svg.appendChild(label);
                 
                 // 动画效果
                 setTimeout(() => {
-                    barItem.querySelector('.bar-fill').style.width = value + '%';
-                }, 100);
+                    circle.setAttribute('r', '5');
+                    label.setAttribute('opacity', '1');
+                }, 300 + index * 100);
             });
+            
+            // 区域动画
+            setTimeout(() => {
+                area.setAttribute('opacity', '1');
+            }, 800);
         }
 
         /**
