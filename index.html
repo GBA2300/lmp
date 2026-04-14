@@ -720,9 +720,16 @@
           }
           
           .contact-modal {
-              max-width: 500px;
-              padding: 0;
+              max-width: 600px;
+              padding: 20px;
               background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+          }
+          
+          .contact-qrcode-image {
+              max-width: 100%;
+              height: auto;
+              display: block;
+              margin: 0 auto;
           }
           
           @keyframes modalFadeIn {
@@ -1433,9 +1440,7 @@
         };
 
         // ==================== 初始化 ====================
-        document.addEventListener('DOMContentLoaded', function() {
-            initBackgroundDecorations();
-        });
+        // 移除重复的DOMContentLoaded事件监听器，将在文件末尾统一处理
 
         /**
          * 初始化背景装饰
@@ -2230,8 +2235,12 @@
         function initContactModal() {
             const contactLink = document.getElementById('contactLink');
             const contactModal = document.getElementById('contactModal');
-            const closeBtn = contactModal.querySelector('.close-btn');
+            let closeBtn = null;
             const saveBtn = document.getElementById('saveContactBtn');
+
+            if (contactModal) {
+                closeBtn = contactModal.querySelector('.close-btn');
+            }
 
             if (contactLink && contactModal && closeBtn && saveBtn) {
                 // 点击联系方式按钮
@@ -2285,6 +2294,7 @@
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
+            initBackgroundDecorations();
             initContactModal();
         });
     </script>
