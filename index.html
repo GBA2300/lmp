@@ -720,16 +720,9 @@
           }
           
           .contact-modal {
-              max-width: 600px;
-              padding: 20px;
+              max-width: 500px;
+              padding: 0;
               background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-          }
-          
-          .contact-qrcode-image {
-              max-width: 100%;
-              height: auto;
-              display: block;
-              margin: 0 auto;
           }
           
           @keyframes modalFadeIn {
@@ -1157,16 +1150,17 @@
     <!-- 联系方式模态框 -->
     <div class="modal" id="contactModal">
         <div class="modal-content contact-modal">
-            <span class="close-btn">&times;</span>
-            <div class="contact-image" id="contactImageContainer">
-                <div class="contact-image-container">
-                    <img src="contact-qrcode.jpg" alt="联系方式" class="contact-qrcode-image">
-                </div>
-                <div class="contact-actions">
-                    <button class="save-btn" id="saveContactBtn">保存到相册</button>
+                <span class="close-btn">&times;</span>
+                <div class="contact-image" id="contactImageContainer">
+                    <div class="contact-image-container" style="text-align: center; padding: 60px 20px;">
+                        <h2 style="font-size: 3rem; font-weight: 900; color: #FF6B9D; margin-bottom: 20px;">gaen2026</h2>
+                        <p style="font-size: 1.2rem; color: #666;">联系方式</p>
+                    </div>
+                    <div class="contact-actions">
+                        <button class="save-btn" id="saveContactBtn">保存到相册</button>
+                    </div>
                 </div>
             </div>
-        </div>
     </div>
 
     <script>
@@ -1440,7 +1434,9 @@
         };
 
         // ==================== 初始化 ====================
-        // 移除重复的DOMContentLoaded事件监听器，将在文件末尾统一处理
+        document.addEventListener('DOMContentLoaded', function() {
+            initBackgroundDecorations();
+        });
 
         /**
          * 初始化背景装饰
@@ -2235,12 +2231,8 @@
         function initContactModal() {
             const contactLink = document.getElementById('contactLink');
             const contactModal = document.getElementById('contactModal');
-            let closeBtn = null;
+            const closeBtn = contactModal.querySelector('.close-btn');
             const saveBtn = document.getElementById('saveContactBtn');
-
-            if (contactModal) {
-                closeBtn = contactModal.querySelector('.close-btn');
-            }
 
             if (contactLink && contactModal && closeBtn && saveBtn) {
                 // 点击联系方式按钮
@@ -2294,7 +2286,6 @@
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
-            initBackgroundDecorations();
             initContactModal();
         });
     </script>
